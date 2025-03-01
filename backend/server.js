@@ -5,6 +5,7 @@ import cors from "cors"
 import cookieParser from "cookie-parser"
 import setupSocket from "./config/socket.js"
 import dotenv from "dotenv"
+import authRoutes from "./routes/auth.js"
 
 dotenv.config()
 
@@ -20,6 +21,7 @@ const io = new Server(server,{
         credentials:true
     }
 })
+setupSocket(io)
 
 
 app.use(express.json())
@@ -34,8 +36,7 @@ app.use(
 )
 
 
-setupSocket(io)
-
+app.use("/api/",authRoutes)
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT,() => {
