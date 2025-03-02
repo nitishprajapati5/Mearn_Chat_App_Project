@@ -1,12 +1,69 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { io } from "socket.io-client";
+import useStore from "../store/Store";
+import { useLocation } from "react-router-dom";
 
 const Dashboard = () => {
   const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState("");
+  const [socket, setSocket] = useState(null);
+  const location = useLocation()
+
+
+  useEffect(() => {
+
+    const params = new URLSearchParams(location.search)
+    const token = params.get('token')
+
+    const newSocket = io("http://localhost:5000", {
+      //withCredentials: true,
+      extraHeaders:{
+        auth:token
+      }
+    });
+
+
+    setSocket(newSocket);
+
+    newSocket.emit("listAllRooms",rooms);
+      console.log(rooms)
+
+    newSocket.on("receiveAllRooms", (fetchedRooms) => {
+      console.log(fetchedRooms)
+      setRooms(fetchedRooms);
+    });
+
+    // socket.on("error",(error)=>{
+    //   console.log("Socket Error from Frontend",error)
+    // })
+
+
+  
+    
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  const fetchAllRooms = () => {
+    if (socket) {
+      socket.emit("listAllRooms",rooms);
+      socket.on("receiveAllRooms", (fetchedRooms) => {
+        console.log(fetchAllRooms)
+        setRooms(fetchedRooms);
+      });
+    
+      console.log(rooms)
+    }
+  };
+
+  useEffect(() => {
+    fetchAllRooms();
+  }, [socket]);
 
   const createRoom = () => {
-    if (roomName.trim()) {
-      setRooms([...rooms, roomName]);
+    if (roomName.trim() && socket) {
+      socket.emit("createRoom", roomName);
       setRoomName("");
     }
   };
@@ -14,8 +71,10 @@ const Dashboard = () => {
   return (
     <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-screen flex items-center justify-center p-6">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">Dashboard</h2>
-        
+        <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
+          Dashboard
+        </h2>
+
         <div className="mb-4">
           <input
             type="text"
@@ -31,8 +90,10 @@ const Dashboard = () => {
             Create Room
           </button>
         </div>
-        
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">Available Rooms</h3>
+
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">
+          Available Rooms
+        </h3>
         <ul>
           {rooms.length > 0 ? (
             rooms.map((room, index) => (
@@ -40,7 +101,7 @@ const Dashboard = () => {
                 key={index}
                 className="p-2 bg-gray-100 rounded-lg mb-2 flex justify-between items-center"
               >
-                {room}
+                {room.name}
                 <button className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition duration-300">
                   Join
                 </button>

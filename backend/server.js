@@ -10,8 +10,19 @@ import authRoutes from "./routes/auth.js"
 dotenv.config()
 
 
-
 const app = express()
+app.use(cors())
+app.use(express.json())
+app.use(cookieParser())
+app.use(
+    cors(
+        {
+            origin:"http://localhost:3001",
+            credentials:true,
+        }
+    )
+)
+
 const server = http.createServer(app)
 
 const io = new Server(server,{
@@ -24,16 +35,7 @@ const io = new Server(server,{
 setupSocket(io)
 
 
-app.use(express.json())
-app.use(cookieParser())
-app.use(
-    cors(
-        {
-            origin:"http://localhost:3001",
-            credentials:true
-        }
-    )
-)
+
 
 
 app.use("/api/",authRoutes)

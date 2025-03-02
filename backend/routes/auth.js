@@ -43,7 +43,7 @@ router.post("/register", async (req, res) => {
             maxAge:900000,
             expires:new Date(Date.now()) + 900000
         })
-        return res.status(201).json(new ApiResponse(201, data, "User Created Successfully"));
+        return res.status(201).json(new ApiResponse(201, {data,generateToken}, "User Created Successfully"));
 
     } catch (error) {
         console.error(error);
@@ -80,7 +80,7 @@ router.post("/login", async (req, res) => {
             expires: new Date(Date.now() + 900000)
         });
 
-        return res.status(200).json(new ApiResponse(200, data, "Login Successfully"));
+        return res.status(200).json(new ApiResponse(200, {data,generateToken}, "Login Successfully"));
 
     } catch (error) {
         console.error(error);

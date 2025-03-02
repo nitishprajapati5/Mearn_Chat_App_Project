@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import axiosInstance from "../axiosInstance";
 import { toast } from "sonner";
+import useStore from "../store/Store";
 
 const Login = () => {
 
   const navigate = useNavigate()
-
+  const {setauthToken} = useStore();
   const {
     handleSubmit,
     register,
@@ -19,8 +20,9 @@ const Login = () => {
     axiosInstance.post("/api/login",{
         data
     }).then((res) => {
-        console.log(res)
-        navigate("/dashboard")
+        console.log(res.data.data.generateToken)
+        setauthToken(res.data.data.generateToken)
+        navigate(`/dashboard?token=${res.data.data.generateToken}`)
         toast.success("Login Successfully")
     }).catch((error) => {
         console.log(error)

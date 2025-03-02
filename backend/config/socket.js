@@ -6,10 +6,19 @@ import cookie from "cookie"
 export default function setupSocket (io){
     io.use(async(socket,next) => {
         try {
+            console.log(socket)
             const token = socket.handshake.auth?.token || socket.handshake.headers['auth'];
             //console.log(socket)
             //const token = cookie.parse(socket.handshake.headers.auth || "");
             //const token = cookies.auth;
+
+            // var cookief = socket.handshake.headers.cookie;
+            // var cookies = cookie.parse(socket.handshake.headers.cookie);
+
+            // console.log('Logging Cookies',cookies)
+            console.log(token)
+
+
             if(!token){
                 return next(new Error("Authentication error:Token Required"))
             }
@@ -30,6 +39,7 @@ export default function setupSocket (io){
             next();
         } catch (error) {
             console.error("Socket authentication failed:", error);
+            socket.emit("error",error)
             return next(new Error("Authentication error"));
         }
     })
@@ -106,14 +116,13 @@ export default function setupSocket (io){
 
         socket.on("listAllRooms",async() => {
             try {
+                console.log("Listing All Rooms")
                 
-                const data = await prisma.room.findMany({
-
-                })
+                const data = await prisma.room.findMany()
 
                 console.log(data)
-                socket.emit("listAllRooms",data)
-
+                socket.emit("receiveAllRooms",data)
+                //io.emit("listAllRooms",data)
             } catch (error) {
                 console.error("Error creating room:", error);
                 socket.emit("error", { message: "Failed to join room" });
