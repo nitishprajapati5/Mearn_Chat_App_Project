@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Login from './Components/Login';
 import Register from './Components/Register';
 import Dashboard from './Components/Dashboard';
+import {Toaster} from 'sonner'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path='/dashboard' element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
+      <Toaster richColors/>
     </div>
   );
 }

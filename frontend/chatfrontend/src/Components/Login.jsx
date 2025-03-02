@@ -1,8 +1,13 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import axiosInstance from "../axiosInstance";
+import { toast } from "sonner";
 
 const Login = () => {
+
+  const navigate = useNavigate()
+
   const {
     handleSubmit,
     register,
@@ -11,6 +16,22 @@ const Login = () => {
 
   const onSubmit = (data) => {
     console.log(data);
+    axiosInstance.post("/api/login",{
+        data
+    }).then((res) => {
+        console.log(res)
+        navigate("/dashboard")
+        toast.success("Login Successfully")
+    }).catch((error) => {
+        console.log(error)
+        if(error.status === 401){
+            //console.log(error.response.data.message)
+            toast.error(error.response.data.message)
+        }
+        if(error.status === 404){
+            toast.error(error.response.data.message)
+        }
+    })
   };
 
   return (

@@ -10,7 +10,8 @@ const router = express.Router()
 
 router.post("/register", async (req, res) => {
     try {
-        const { email, name, password } = req.body;
+        console.log(req.body)
+        const { email, name, password } = req.body.data;
         const salt = await bcrypt.genSalt(10);
 
         console.log(password);
@@ -36,7 +37,7 @@ router.post("/register", async (req, res) => {
         
         const generateToken = jwt.sign({ id: data.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
         res.cookie('auth',generateToken,{
-            sameSite:'none',
+            sameSite:'lax',
             httpOnly:true,
             secure:false,
             maxAge:900000,
@@ -52,7 +53,8 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
     try {
-        const { email, password } = req.body;
+        console.log(req.body)
+        const { email, password } = req.body.data;
 
         // Find user by email
         const data = await prisma.user.findFirst({
@@ -71,7 +73,7 @@ router.post("/login", async (req, res) => {
         const generateToken = jwt.sign({ id: data.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         res.cookie("auth", generateToken, {
-            sameSite: "none",
+            sameSite: 'lax',
             httpOnly: true,
             secure: process.env.NODE_ENV === "production", 
             maxAge: 900000, 
