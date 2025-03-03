@@ -40,7 +40,7 @@ export default function setupSocket (io){
         } catch (error) {
             console.error("Socket authentication failed:", error);
             socket.emit("error",error)
-            return next(new Error("Authentication error"));
+            // return next(new Error("Authentication error"));
         }
     })
 
@@ -60,9 +60,24 @@ export default function setupSocket (io){
                         ownerId: socket.user.id // Use authenticated user's ID
                     }
                 });
+
+                //add the User to Room
+
+                const addingUser = await prisma.roomMember.create({
+                    data:{
+                        room_id:room.id,
+                        user_id:socket.user.id
+                    }
+                })
+
+                const allRoomData = await prisma.room.findMany({
+                    where:{
+                        ownerId:socket.user.id
+                    }
+                })
         
                 socket.join(`room_${room.id}`); // Join the created room
-                socket.emit("roomCreated", room); // Notify all clients
+                socket.emit("roomCreated", allRoomData); // Notify all clients
                 
             } catch (error) {
                 console.error("Error creating room:", error);
@@ -117,15 +132,223 @@ export default function setupSocket (io){
         socket.on("listAllRooms",async() => {
             try {
                 console.log("Listing All Rooms")
-                
-                const data = await prisma.room.findMany()
+                console.log(socket.user.id)
+                // const data = await prisma.room.findMany({
+                //     where:{
+                //         AND:{
+                //             NOT:{
+                //                 ownerId:socket.user.id
+                //             },
+                //         },               
+                //         members:{
+                //             some:{
+                //                 id:{
+                //                     notIn:socket.user.id
+                //                 }
+                //             }
+                //         }
+                    
+                        
+                //     },
+                // })
 
+                const data = await prisma.room.findMany({
+                    where: {
+                      ownerId: {
+                        not: socket.user.id, // Exclude rooms owned by user 5
+                      }
+                    }
+                  });
+                  
                 console.log(data)
                 socket.emit("receiveAllRooms",data)
                 //io.emit("listAllRooms",data)
             } catch (error) {
                 console.error("Error creating room:", error);
                 socket.emit("error", { message: "Failed to join room" });
+            }
+        })
+
+        socket.on("userRooms",async() =>{
+            try {
+                console.log("Listing User Room")
+                const data = await prisma.room.findMany({
+                    where:{
+                        ownerId:socket.user.id
+                    }
+                })
+
+                console.log(data)
+                socket.emit("sendUserRooms",data)
+            } catch (error) {
+                console.error("Error creating room:", error);
+                socket.emit("error", { message: "Failed to join room" });
+            
+            }
+        })
+
+        socket.on("userJoinedRoomWhereUserJoined",async() => {
+            try {
+              
+                // const rooms = await prisma.room.findMany({
+                //     where:{
+                //         ownerId:{
+                //             not:socket.user.id
+                //         },
+                //         members:{
+                //             some:{
+                //                 id:{
+                //                     not:socket.user.id
+                //                 }
+                //             }
+                //         },
+                //     },
+                // })
+                // const rooms = await prisma.room.findMany({
+                //     where: {
+                //       ownerId: {
+                //         not: socket.user.id, // Exclude rooms owned by user 5
+                //       },
+                //       members: {
+                //         some: {
+                //           user_id: {
+                //             not: socket.user.id, // Ensure at least one member is NOT user 5
+                //           },
+                //         },
+                //       },
+                //     },
+                //   });
+
+                  const rooms = await prisma.room.findMany({
+                    where: {
+                      ownerId: {
+                        not: socket.user.id, // Exclude rooms owned by user 5
+                      }
+                    }
+                  });
+                  
+
+                  //console.log("Excluding and Including",rooms)
+                  socket.emit("userRecievedJoinedRoomWhereUserJoined",rooms)
+
+                //console.log(data)
+            } catch (error) {
+                console.error("Error creating room:", error);
+                socket.emit("error", { message: "Failed to join room" });
+            
+            }
+        })
+
+        socket.on("joinRoom",async({roomId}) => {
+            try {
+                console.log(roomId)
+                 const data = await prisma.roomMember.create({
+                    data:{
+                        room_id:roomId,
+                        user_id:socket.user.id
+                    }
+                 })
+            } catch (error) {
+                console.error("Error creating room:", error);
+                socket.emit("error", { message: "Failed to join room" });
+            
+            }
+        })
+
+        socket.on("getRoomName",async({roomId}) =>{
+            try {
+                console.log("Room Id",roomId)
+                const data = await prisma.room.findUnique({
+                    where:{
+                        id:parseInt(roomId)
+                    }
+                })
+                console.log(data)
+                socket.emit("receiveRoomName",data)
+            } catch (error) {
+                console.error("Error creating room:", error);
+                socket.emit("error", { message: "Failed to join room" });
+            
+            }
+        })
+
+        socket.on('getUserfromRooom',async({roomId}) => {
+            try {
+                console.log("Get User from Room",roomId)
+
+                const data = await prisma.roomMember.findMany({
+                    where:{
+                        room_id:parseInt(roomId)
+                    },
+                    include:{
+                        user:true
+                    }
+                })
+
+                console.log("Get User from Room",data)
+                socket.emit("receiveUserfromRoom",data)
+            } catch (error) {
+                console.log(error)
+            }
+        })
+
+        socket.on("message",async({content,roomId}) => {
+            console.log("On Message",content,roomId)
+            try {
+                const data = await prisma.message.create({
+                    data:{
+                        content:content,
+                        room_id:parseInt(roomId),
+                        userId:socket.user.id
+                    }
+                })
+
+                const allMessages = await prisma.message.findMany({
+                    where:{
+                        room_id:parseInt(roomId),
+                    },
+                    orderBy:{
+                        createdAt:'desc'
+                    },
+                    include:{
+                        user:true,
+                    }
+                })
+
+                const finalData = {
+                    allMessages,
+                    user:socket.user
+                }
+
+
+
+                console.log(finalData)
+                socket.emit("getAllMessages",finalData)
+
+            } catch (error) {
+                console.log(error)
+            }
+        })
+
+        socket.on("onGetAllMessages",async({roomId}) => {
+
+            try {
+                const allMessages = await prisma.message.findMany({
+                    where:{
+                        room_id:parseInt(roomId),
+                    },
+                    orderBy:{
+                        createdAt:'asc'
+                    },
+                    include:{
+                        user:true,
+                    }
+
+                })
+
+                socket.emit("receiveAllMessage",{allMessages,user:socket.user})
+            } catch (error) {
+                
             }
         })
         
