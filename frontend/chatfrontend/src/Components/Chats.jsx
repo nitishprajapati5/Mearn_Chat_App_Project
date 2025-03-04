@@ -24,15 +24,9 @@ export default function ChatPage() {
     handleSubmit,
     register,
     formState:{errors},
+    reset
   } = useForm();
 
-  //console.log('Token',token)
-  //console.log("room Id",roomId)
-//   const [messages, setMessages] = useState({
-//     Alice: ["Hello!"],
-//     Bob: ["Hey there!"],
-//     Charlie: ["Hi!"]
-//   });
   const [newMessage, setNewMessage] = useState("");
 
   const sendMessage = () => {
@@ -84,31 +78,17 @@ export default function ChatPage() {
     console.log(data.message)
     if(socket){
         socket.emit("message",{content:data.message,roomId:roomId})
-        socket.on("getAllMessages",(fetchMessages) => {
-            console.log(fetchMessages)
+        socket.emit("onGetAllMessages",({roomId:roomId}))
+        socket.on("receiveAllMessage",(fetchMessages) => {
+            console.log("Fetching Messages",fetchMessages)
         })
+        reset()
     }
 
   }
 
   return (
     <div className="flex justify-center p-6 bg-gradient-to-r from-blue-100 to-indigo-200">
-      {/* <div className="w-1/4 bg-white p-4 rounded-2xl shadow-xl overflow-y-auto">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">Users</h2>
-        <ul>
-          {users.map((user) => (
-            <li
-              key={user}
-              className={`p-3 cursor-pointer rounded-lg text-lg font-medium transition-all ${
-                activeUser === user ? "bg-blue-500 text-white" : "hover:bg-gray-300 text-gray-700"
-              }`}
-              onClick={() => setActiveUser(user)}
-            >
-              {user}
-            </li>
-          ))}
-        </ul>
-      </div> */}
       <div className="sm:w-full lg:w-1/2 h-screen bg-white p-6 rounded-2xl shadow-xl flex flex-col ml-2">
         <h2 className="text-2xl font-semibold mb-4 text-gray-700">{roomName}</h2>
         <div className="flex flex-row">{avatar.map((avt,index) => (
@@ -128,12 +108,6 @@ export default function ChatPage() {
         </div>
         <div>
           <form className="mt-4 flex  gap-2" onSubmit={handleSubmit(onSubmit)}>
-          {/* <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 p-3 border rounded-lg shadow-sm focus:ring focus:ring-blue-300"
-          /> */}
         <div className="flex w-full">
         <div className="w-full">
         <input 

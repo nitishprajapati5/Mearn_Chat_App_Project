@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import {toast} from "sonner"
+
 const Dashboard = () => {
   const navigate = useNavigate()
   const [rooms, setRooms] = useState([]);
@@ -95,6 +97,7 @@ const Dashboard = () => {
           console.log("All Room Data",allRoomData)
           setUserRoom(allRoomData)
         })
+        toast.success("Created Room Successfully")
       }
     }
   };
@@ -108,7 +111,7 @@ const Dashboard = () => {
 
   return (
     <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-screen flex items-center justify-center p-6 min-h-screen">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-3/4">
         <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
           Dashboard
         </h2>

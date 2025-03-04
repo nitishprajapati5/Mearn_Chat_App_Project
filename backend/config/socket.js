@@ -346,7 +346,7 @@ export default function setupSocket (io){
 
                 })
 
-                socket.emit("receiveAllMessage",{allMessages,user:socket.user})
+                io.emit("receiveAllMessage",{allMessages,user:socket.user})
             } catch (error) {
                 
             }
